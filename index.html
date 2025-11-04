@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Diet Tracker">
+    <title>Diet Tracker - Andrea Remondi</title>
+    
+    <!-- React e ReactDOM da CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Fix per iPhone */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+        
+        button {
+            cursor: pointer;
+            -webkit-appearance: none;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Icone SVG inline
+        const ChevronDown = () => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        );
+
+        const ChevronUp = () => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+        );
+
+        const RotateCcw = () => (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="1 4 1 10 7 10"></polyline>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            </svg>
+        );
+
+        const DietTracker = () => {
+            const [clickedItems, setClickedItems] = useState({});
+            const [expandedSections, setExpandedSections] = useState({
+                colazione: true,
+                spuntinoMattina: false,
+                pranzo: false,
+                spuntinoPomeriggio: false,
+                cena: false,
+                integrazione: false
+            });
+
+            const toggleItem = (itemId) => {
+                setClickedItems(prev => ({
+                    ...prev,
+                    [itemId]: !prev[itemId]
+                }));
+            };
+
+            const resetAll = () => {
+                setClickedItems({});
+            };
+
+            const toggleSection = (section) => {
+                setExpandedSections(prev => ({
+                    ...prev,
+                    [section]: !prev[section]
+                }));
+            };
+
+            const ItemButton = ({ id, children }) => (
+                <button
+                    onClick={() => toggleItem(id)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        clickedItems[id]
+                            ? 'bg-red-500 text-white'
+                            : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                    }`}
+                >
+                    {children}
+                </button>
+            );
+
+            const Section = ({ title, sectionKey, children }) => (
+                <div className="mb-4 border border-gray-200 rounded-lg overflow-hidden">
+                    <button
+                        onClick={() => toggleSection(sectionKey)}
+                        className="w-full px-6 py-4 bg-blue-50 hover:bg-blue-100 flex items-center justify-between transition-colors"
+                    >
+                        <h2 className="text-xl font-bold text-gray-800">{title}</h2>
+                        {expandedSections[sectionKey] ? <ChevronUp /> : <ChevronDown />}
+                    </button>
+                    {expandedSections[sectionKey] && (
+                        <div className="p-6 bg-white">{children}</div>
+                    )}
+                </div>
+            );
+
+            const OptionGroup = ({ title, children }) => (
+                <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-700 mb-3">{title}</h3>
+                    <div className="flex flex-wrap gap-2">{children}</div>
+                </div>
+            );
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
+                    <div className="max-w-4xl mx-auto">
+                        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+                            <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
+                                <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+                                    Strategia Nutrizionale - Andrea Remondi
+                                </h1>
+                                <button
+                                    onClick={resetAll}
+                                    className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium"
+                                >
+                                    <RotateCcw />
+                                    Reset
+                                </button>
+                            </div>
+                            <p className="text-gray-600">Clicca sugli alimenti consumati per tracciarli</p>
+                        </div>
+
+                        <Section title="🌅 COLAZIONE" sectionKey="colazione">
+                            <OptionGroup title="PRE BICI 1h30 al MATTINO">
+                                <ItemButton id="col-pre-bici-caffe">Caffè/Tè</ItemButton>
+                                <ItemButton id="col-pre-bici-pane">3 fette pan bauletto/4 fette biscottate</ItemButton>
+                                <ItemButton id="col-pre-bici-marmellata">Marmellata/Miele</ItemButton>
+                                <ItemButton id="col-pre-bici-ricotta">100g Ricotta</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="PRE LUNGO WEEK-END">
+                                <ItemButton id="col-lungo-caffe">Caffè/Tè</ItemButton>
+                                <ItemButton id="col-lungo-pane">4 fette pan bauletto/biscottate</ItemButton>
+                                <ItemButton id="col-lungo-marmellata">Miele/Marmellata</ItemButton>
+                                <ItemButton id="col-lungo-burro">Burro di cocco/Ghi</ItemButton>
+                                <ItemButton id="col-lungo-bcaa">5 CPS BCAA (facoltativo)</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="POST ALLENAMENTO FUNZIONALE - Opzione 1">
+                                <ItemButton id="col-post-caffe1">Caffè/Tè</ItemButton>
+                                <ItemButton id="col-post-riso">2 cucchiai fiocchi riso/farro</ItemButton>
+                                <ItemButton id="col-post-avena">2 cucchiai cereali avena</ItemButton>
+                                <ItemButton id="col-post-yogurt1">150g Yogurt greco/Kefir</ItemButton>
+                                <ItemButton id="col-post-proteine1">15g Proteine whey (facoltativo)</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="POST ALLENAMENTO FUNZIONALE - Opzione 2">
+                                <ItemButton id="col-post-caffe2">Caffè/Tè</ItemButton>
+                                <ItemButton id="col-post-proteine2">15g Proteine whey in acqua</ItemButton>
+                                <ItemButton id="col-post-pane2">4 fette pan bauletto/150g pane fresco</ItemButton>
+                                <ItemButton id="col-post-ricotta2">100g Ricotta capra con marmellata</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="POST ALLENAMENTO FUNZIONALE - Opzione 3">
+                                <ItemButton id="col-post-caffe3">Caffè/Tè</ItemButton>
+                                <ItemButton id="col-post-pane3">4 fette pan bauletto/150g pane fresco</ItemButton>
+                                <ItemButton id="col-post-scamorza">2 fette scamorza/provola</ItemButton>
+                                <ItemButton id="col-post-affettati">80g Affettati freschi/100g salmone/2 uova</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="POST ALLENAMENTO FUNZIONALE - Opzione 4">
+                                <ItemButton id="col-post-caffe4">Caffè/Tè</ItemButton>
+                                <ItemButton id="col-post-porridge">Porridge 80g avena + bevanda vegetale</ItemButton>
+                                <ItemButton id="col-post-proteine4">30g Proteine whey</ItemButton>
+                                <ItemButton id="col-post-banana">1 Banana</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="GIORNO POST CORSA FASTING - Opzione 1">
+                                <ItemButton id="col-fast-caffe1">Caffè/Tè</ItemButton>
+                                <ItemButton id="col-fast-riso1">2 cucchiai fiocchi riso/farro</ItemButton>
+                                <ItemButton id="col-fast-avena1">1 cucchiaio cereali avena</ItemButton>
+                                <ItemButton id="col-fast-yogurt1">150g Yogurt greco/Kefir</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="GIORNO POST CORSA FASTING - Opzione 2">
+                                <ItemButton id="col-fast-caffe2">Caffè/Tè</ItemButton>
+                                <ItemButton id="col-fast-bisc">4 fette biscottate</ItemButton>
+                                <ItemButton id="col-fast-ricotta">150g Ricotta</ItemButton>
+                                <ItemButton id="col-fast-marmellata">Miele/Marmellata</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="GIORNO POST CORSA FASTING - Opzione 3">
+                                <ItemButton id="col-fast-caffe3">Caffè/Tè</ItemButton>
+                                <ItemButton id="col-fast-pancakes">Pancakes (1 uovo + 100ml albume + yogurt + 70g avena)</ItemButton>
+                                <ItemButton id="col-fast-guarni">30g Marmellata + 20g burro arachidi</ItemButton>
+                            </OptionGroup>
+                        </Section>
+
+                        <Section title="☕ SPUNTINO METÀ MATTINA" sectionKey="spuntinoMattina">
+                            <OptionGroup title="Opzione 1">
+                                <ItemButton id="spun-matt-cracker1">1 pacchetto cracker grani antichi</ItemButton>
+                                <ItemButton id="spun-matt-parm">40g Parmigiano</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="Opzione 2">
+                                <ItemButton id="spun-matt-gallette">4 Gallette</ItemButton>
+                                <ItemButton id="spun-matt-aff">60g Crudo/Bresaola/Fesa</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="Opzione 3">
+                                <ItemButton id="spun-matt-frutta">200g Frutta fresca</ItemButton>
+                                <ItemButton id="spun-matt-kefir">250ml Kefir bianco</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="Opzione 4">
+                                <ItemButton id="spun-matt-frutta-secca">40g Mix frutta secca</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="Opzione 5">
+                                <ItemButton id="spun-matt-budino">1 Budino MILK HIGHPRO/DANONE</ItemButton>
+                            </OptionGroup>
+                        </Section>
+
+                        <Section title="🍽️ PRANZO" sectionKey="pranzo">
+                            <OptionGroup title="CARBOIDRATI - Post Allenamento Lungo Weekend">
+                                <ItemButton id="pranzo-carbo-lungo-farro">150g Farro/Riso integrale/Cous cous</ItemButton>
+                                <ItemButton id="pranzo-carbo-lungo-pasta">150g Pasta integrale/Kamut/Farro</ItemButton>
+                                <ItemButton id="pranzo-carbo-lungo-gnocchi">400g Gnocchi di patate</ItemButton>
+                                <ItemButton id="pranzo-olio1">1 cucchiaio olio EVO</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="CARBOIDRATI - In Settimana (Allenamento Mattina/Qualità Pomeriggio)">
+                                <ItemButton id="pranzo-carbo-sett-riso">100g Riso integrale/Cous cous</ItemButton>
+                                <ItemButton id="pranzo-carbo-sett-pasta">100g Pasta integrale/Kamut/Farro</ItemButton>
+                                <ItemButton id="pranzo-carbo-sett-pane">150-180g Pane fresco grani antichi</ItemButton>
+                                <ItemButton id="pranzo-carbo-sett-piadina">1,5 Piadina kamut</ItemButton>
+                                <ItemButton id="pranzo-olio2">1 cucchiaio olio EVO</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="CARBOIDRATI - Scarico/Non Allenato">
+                                <ItemButton id="pranzo-carbo-scarico-cracker">2 pacchetti cracker</ItemButton>
+                                <ItemButton id="pranzo-carbo-scarico-patate">250g Patate</ItemButton>
+                                <ItemButton id="pranzo-carbo-scarico-pane">100g Pane fresco grani antichi</ItemButton>
+                                <ItemButton id="pranzo-olio3">1 cucchiaio olio EVO</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="PROTEINE">
+                                <ItemButton id="pranzo-prot-legumi">150g Legumi + 100g Feta capra (1x/sett)</ItemButton>
+                                <ItemButton id="pranzo-prot-pesce">200g Pesce bianco/Tonno/Sgombro (2x/sett)</ItemButton>
+                                <ItemButton id="pranzo-prot-pollo">150g Pollo/Tacchino/Coniglio (1x/sett)</ItemButton>
+                                <ItemButton id="pranzo-prot-carne">150g Carne rossa vitello/manzo (1x/sett)</ItemButton>
+                                <ItemButton id="pranzo-prot-uova">1 uovo + 2 albumi (1x/sett)</ItemButton>
+                                <ItemButton id="pranzo-prot-vegetale">Polpette soia/Burger vegetale (1x/sett)</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="VERDURE">
+                                <ItemButton id="pranzo-verd-cotte">Verdure cotte (spinaci, zucchine, finocchi, carote, fagiolini, broccoli)</ItemButton>
+                                <ItemButton id="pranzo-verd-crude">Verdure crude (cetriolo, rucola, valeriana, songino, mix orientale, carote)</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="CONDIMENTO">
+                                <ItemButton id="pranzo-cond-olio">1 cucchiaio olio EVO</ItemButton>
+                                <ItemButton id="pranzo-cond-semi">1 cucchiaio olio + 1 cucchiaino semi</ItemButton>
+                                <ItemButton id="pranzo-cond-avocado">Mezzo avocado</ItemButton>
+                                <ItemButton id="pranzo-cond-tahina">1 cucchiaino tahina + olio + limone</ItemButton>
+                                <ItemButton id="pranzo-gomasio">Gomasio (al posto del sale)</ItemButton>
+                            </OptionGroup>
+                        </Section>
+
+                        <Section title="🥤 SPUNTINO POMERIGGIO" sectionKey="spuntinoPomeriggio">
+                            <OptionGroup title="1h30 PRE CORSA QUALITÀ - Opzione 1">
+                                <ItemButton id="spun-pom-bisc">3 fette biscottate/2 fette pan bauletto</ItemButton>
+                                <ItemButton id="spun-pom-caprino">Formaggio caprino</ItemButton>
+                                <ItemButton id="spun-pom-composta">Composta di frutta</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="1h30 PRE CORSA QUALITÀ - Opzione 2">
+                                <ItemButton id="spun-pom-banana">1 Banana</ItemButton>
+                                <ItemButton id="spun-pom-cracker">1 pacchetto cracker grani antichi</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="30 min PRE CORSA QUALITÀ">
+                                <ItemButton id="spun-pom-30-bisc">2 fette biscottate + composta</ItemButton>
+                                <ItemButton id="spun-pom-30-alb">4 albicocche disidratate</ItemButton>
+                                <ItemButton id="spun-pom-30-bar">1 barretta energetica carboidrati</ItemButton>
+                            </OptionGroup>
+                        </Section>
+
+                        <Section title="🌙 CENA" sectionKey="cena">
+                            <OptionGroup title="CARBOIDRATI - Post Corsa Qualità/Pre Allenamento Lungo">
+                                <ItemButton id="cena-carbo-post-farro">100g Farro/Riso integrale/Cous cous</ItemButton>
+                                <ItemButton id="cena-carbo-post-pasta">100g Pasta kamut/Farro/Senatore Cappelli</ItemButton>
+                                <ItemButton id="cena-carbo-post-pane">150g Pane fresco grani antichi</ItemButton>
+                                <ItemButton id="cena-olio1">1 cucchiaio olio EVO</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="CARBOIDRATI - Allenamento Mattina/Pausa">
+                                <ItemButton id="cena-carbo-pausa-cracker">1 pacchetto cracker</ItemButton>
+                                <ItemButton id="cena-carbo-pausa-patate">250g Patate</ItemButton>
+                                <ItemButton id="cena-carbo-pausa-pane">100g Pane fresco grani antichi</ItemButton>
+                                <ItemButton id="cena-olio2">1 cucchiaio olio EVO</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="PROTEINE">
+                                <ItemButton id="cena-prot-pesce">200g Pesce fresco pescato (2x/sett)</ItemButton>
+                                <ItemButton id="cena-prot-salmone">100g Salmone selvaggio + Philadelphia</ItemButton>
+                                <ItemButton id="cena-prot-gamberetti">200g Gamberetti (2x/sett)</ItemButton>
+                                <ItemButton id="cena-prot-legumi">150g Legumi + 100g Feta (1x/sett)</ItemButton>
+                                <ItemButton id="cena-prot-uova">2 Uova bio strapazzate (1x/sett)</ItemButton>
+                                <ItemButton id="cena-prot-carne">180-200g Carne bianca/Macinato magro (2x/sett)</ItemButton>
+                                <ItemButton id="cena-prot-vegetale">Polpette soia/Burger vegetale (1x/sett)</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="VERDURE">
+                                <ItemButton id="cena-verd">Spinaci, zucchine, finocchi, olive verdi, sedano, carote, verza, friarielli, bietola, alga wakame, cetriolo, rucola, valeriana, songino, fagiolini</ItemButton>
+                                <ItemButton id="cena-verd-lim">Limita 150g: carciofi, asparagi, barbabietola, scarola, porro, lattuga, broccolo, cavolfiore</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="CONDIMENTO">
+                                <ItemButton id="cena-cond-olio">1 cucchiaio olio EVO</ItemButton>
+                                <ItemButton id="cena-cond-semi">1 cucchiaio olio + 1 cucchiaino semi</ItemButton>
+                                <ItemButton id="cena-cond-avocado">Mezzo avocado</ItemButton>
+                                <ItemButton id="cena-cond-tahina">1 cucchiaino tahina + olio + limone</ItemButton>
+                                <ItemButton id="cena-gomasio">Gomasio</ItemButton>
+                            </OptionGroup>
+                        </Section>
+
+                        <Section title="💊 INTEGRAZIONE" sectionKey="integrazione">
+                            <OptionGroup title="PRE USCITA CORSA SCARICO Z1-Z2">
+                                <ItemButton id="int-scarico-bcaa">5 CPS BCAA 2:1:1</ItemButton>
+                                <ItemButton id="int-scarico-mct">1 bustina MCT oil</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="PRE ALLENAMENTO FUNZIONALE">
+                                <ItemButton id="int-funz-bar">1 barretta carboidrati</ItemButton>
+                                <ItemButton id="int-funz-alb">4 albicocche disidratate</ItemButton>
+                                <ItemButton id="int-funz-bisc">2 fette biscottate + marmellata/miele</ItemButton>
+                                <ItemButton id="int-funz-banana">1 Banana</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="POST ALLENAMENTO FUNZIONALE">
+                                <ItemButton id="int-post-bcaa">1 CPS BCAA</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="PRE CORSA Z3/Z4">
+                                <ItemButton id="int-corsa-gel">¾-1 gel maltodestrine</ItemButton>
+                                <ItemButton id="int-corsa-bar">1 barretta</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="POST CORSA INTENSA">
+                                <ItemButton id="int-post-corsa-prot">30g Proteine whey idrolizzate</ItemButton>
+                                <ItemButton id="int-post-corsa-amino">10g Aminoacidi essenziali</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="DURANTE BICI - Idratazione">
+                                <ItemButton id="int-bici-acqua">750ml acqua ogni 1h30</ItemButton>
+                                <ItemButton id="int-bici-sali">30-60g Sali ultra per4m + 3g sale</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="DURANTE BICI - Nutrizione">
+                                <ItemButton id="int-bici-gel">Gel ogni 30 min (40g CHO)</ItemButton>
+                                <ItemButton id="int-bici-bar">Barretta 20g CHO</ItemButton>
+                                <ItemButton id="int-bici-caff">Gel con caffeina dopo 2h</ItemButton>
+                            </OptionGroup>
+
+                            <OptionGroup title="PRE GARA">
+                                <ItemButton id="int-gara-cena">Cena: Riso, Pollo, Verdure</ItemButton>
+                                <ItemButton id="int-gara-col">Colazione: 6 fette biscottate + burro arachidi + marmellata</ItemButton>
+                                <ItemButton id="int-gara-amino">10g Aminoacidi in acqua</ItemButton>
+                                <ItemButton id="int-gara-hydra">750ml acqua + 30g Sali hydra</ItemButton>
+                                <ItemButton id="int-gara-bar">1h PRE: 1 barretta KECARBO</ItemButton>
+                            </OptionGroup>
+                        </Section>
+
+                        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                            <p className="text-sm text-gray-600 text-center">
+                                💧 <strong>Idratazione giornaliera:</strong> 1L durante la mattinata + 750ml nel pomeriggio
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Render dell'app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<DietTracker />);
+    </script>
+</body>
+</html>
