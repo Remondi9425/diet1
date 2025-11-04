@@ -42,7 +42,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState } = React;
+        const { useState, useEffect } = React;
 
         // Icone SVG inline
         const ChevronDown = () => (
@@ -65,7 +65,17 @@
         );
 
         const DietTracker = () => {
-            const [clickedItems, setClickedItems] = useState({});
+            // Carica i dati salvati da localStorage all'avvio
+            const [clickedItems, setClickedItems] = useState(() => {
+                const saved = localStorage.getItem('dietTrackerData');
+                return saved ? JSON.parse(saved) : {};
+            });
+
+            const [lastReset, setLastReset] = useState(() => {
+                const saved = localStorage.getItem('dietTrackerLastReset');
+                return saved || new Date().toLocaleDateString('it-IT');
+            });
+
             const [expandedSections, setExpandedSections] = useState({
                 colazione: true,
                 spuntinoMattina: false,
@@ -74,6 +84,11 @@
                 cena: false,
                 integrazione: false
             });
+
+            // Salva i dati in localStorage ogni volta che cambiano
+            useEffect(() => {
+                localStorage.setItem('dietTrackerData', JSON.stringify(clickedItems));
+            }, [clickedItems]);
 
             const toggleItem = (itemId) => {
                 setClickedItems(prev => ({
@@ -84,6 +99,10 @@
 
             const resetAll = () => {
                 setClickedItems({});
+                const today = new Date().toLocaleDateString('it-IT');
+                setLastReset(today);
+                localStorage.setItem('dietTrackerLastReset', today);
+                localStorage.removeItem('dietTrackerData');
             };
 
             const toggleSection = (section) => {
@@ -145,6 +164,7 @@
                                 </button>
                             </div>
                             <p className="text-gray-600">Clicca sugli alimenti consumati per tracciarli</p>
+                            <p className="text-sm text-gray-500 mt-2">Ultimo reset: {lastReset}</p>
                         </div>
 
                         <Section title="🌅 COLAZIONE" sectionKey="colazione">
