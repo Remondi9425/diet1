@@ -8,6 +8,11 @@
     <meta name="apple-mobile-web-app-title" content="Diet Tracker">
     <title>Diet Tracker - Andrea Remondi</title>
     
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
     <!-- React e ReactDOM da CDN -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -25,7 +30,6 @@
             -moz-osx-font-smoothing: grayscale;
         }
         
-        /* Fix per iPhone */
         * {
             -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
@@ -36,15 +40,39 @@
             -webkit-appearance: none;
             border: none;
         }
+        
+        input {
+            -webkit-appearance: none;
+            appearance: none;
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
+        // ========================================
+        // CONFIGURA QUI LE TUE CREDENZIALI FIREBASE
+        // ========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCqCVHFC7pfLsM0lEpOxRdQNT9Zb_44ynk",
+         authDomain: "diet-tracking-38605.firebaseapp.com",
+         databaseURL: "https://diet-tracking-38605-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "diet-tracking-38605",
+         storageBucket: "diet-tracking-38605.firebasestorage.app",
+         messagingSenderId: "942751380882",
+          appId: "1:942751380882:web:5807595dc7b00c7c8dfd4b"
+        };
+        // ========================================
+
+        // Inizializza Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
         const { useState, useEffect } = React;
 
-        // Icone SVG inline
+        // Icone SVG
         const ChevronDown = () => (
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="6 9 12 15 18 9"></polyline>
@@ -64,18 +92,122 @@
             </svg>
         );
 
+        const LogOut = () => (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+        );
+
+        // Componente Login
+        const LoginForm = ({ onLogin }) => {
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [isRegistering, setIsRegistering] = useState(false);
+            const [error, setError] = useState('');
+            const [loading, setLoading] = useState(false);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setError('');
+                setLoading(true);
+
+                try {
+                    if (isRegistering) {
+                        await auth.createUserWithEmailAndPassword(email, password);
+                    } else {
+                        await auth.signInWithEmailAndPassword(email, password);
+                    }
+                } catch (err) {
+                    if (err.code === 'auth/email-already-in-use') {
+                        setError('Email già in uso. Prova a fare login.');
+                    } else if (err.code === 'auth/weak-password') {
+                        setError('Password troppo debole. Usa almeno 6 caratteri.');
+                    } else if (err.code === 'auth/user-not-found') {
+                        setError('Utente non trovato. Registrati prima.');
+                    } else if (err.code === 'auth/wrong-password') {
+                        setError('Password errata.');
+                    } else if (err.code === 'auth/invalid-email') {
+                        setError('Email non valida.');
+                    } else {
+                        setError('Errore: ' + err.message);
+                    }
+                }
+                setLoading(false);
+            };
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
+                        <h1 className="text-3xl font-bold text-gray-800 mb-2 text-center">
+                            Diet Tracker
+                        </h1>
+                        <p className="text-gray-600 mb-6 text-center">Andrea Remondi</p>
+
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Email
+                                </label>
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required
+                                    disabled={loading}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Password
+                                </label>
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required
+                                    disabled={loading}
+                                />
+                            </div>
+
+                            {error && (
+                                <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
+                                    {error}
+                                </div>
+                            )}
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 rounded-lg transition-colors disabled:opacity-50"
+                            >
+                                {loading ? 'Caricamento...' : (isRegistering ? 'Registrati' : 'Accedi')}
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setIsRegistering(!isRegistering)}
+                                className="w-full text-blue-500 hover:text-blue-600 text-sm"
+                                disabled={loading}
+                            >
+                                {isRegistering ? 'Hai già un account? Accedi' : 'Non hai un account? Registrati'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        // Componente principale
         const DietTracker = () => {
-            // Carica i dati salvati da localStorage all'avvio
-            const [clickedItems, setClickedItems] = useState(() => {
-                const saved = localStorage.getItem('dietTrackerData');
-                return saved ? JSON.parse(saved) : {};
-            });
-
-            const [lastReset, setLastReset] = useState(() => {
-                const saved = localStorage.getItem('dietTrackerLastReset');
-                return saved || new Date().toLocaleDateString('it-IT');
-            });
-
+            const [user, setUser] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [clickedItems, setClickedItems] = useState({});
+            const [lastReset, setLastReset] = useState('');
             const [expandedSections, setExpandedSections] = useState({
                 colazione: true,
                 spuntinoMattina: false,
@@ -85,24 +217,55 @@
                 integrazione: false
             });
 
-            // Salva i dati in localStorage ogni volta che cambiano
+            // Monitora lo stato di autenticazione
             useEffect(() => {
-                localStorage.setItem('dietTrackerData', JSON.stringify(clickedItems));
-            }, [clickedItems]);
+                const unsubscribe = auth.onAuthStateChanged((user) => {
+                    setUser(user);
+                    setLoading(false);
+                });
+                return unsubscribe;
+            }, []);
+
+            // Sincronizza i dati con Firebase
+            useEffect(() => {
+                if (!user) return;
+
+                const dataRef = database.ref('dietData');
+                const resetRef = database.ref('lastReset');
+
+                const unsubscribeData = dataRef.on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    setClickedItems(data || {});
+                });
+
+                const unsubscribeReset = resetRef.on('value', (snapshot) => {
+                    const date = snapshot.val();
+                    setLastReset(date || new Date().toLocaleDateString('it-IT'));
+                });
+
+                return () => {
+                    dataRef.off('value', unsubscribeData);
+                    resetRef.off('value', unsubscribeReset);
+                };
+            }, [user]);
 
             const toggleItem = (itemId) => {
-                setClickedItems(prev => ({
-                    ...prev,
-                    [itemId]: !prev[itemId]
-                }));
+                const newValue = !clickedItems[itemId];
+                const updates = {};
+                updates[`dietData/${itemId}`] = newValue || null;
+                database.ref().update(updates);
             };
 
             const resetAll = () => {
-                setClickedItems({});
                 const today = new Date().toLocaleDateString('it-IT');
-                setLastReset(today);
-                localStorage.setItem('dietTrackerLastReset', today);
-                localStorage.removeItem('dietTrackerData');
+                database.ref().update({
+                    dietData: null,
+                    lastReset: today
+                });
+            };
+
+            const handleLogout = () => {
+                auth.signOut();
             };
 
             const toggleSection = (section) => {
@@ -111,6 +274,18 @@
                     [section]: !prev[section]
                 }));
             };
+
+            if (loading) {
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+                        <div className="text-gray-600">Caricamento...</div>
+                    </div>
+                );
+            }
+
+            if (!user) {
+                return <LoginForm />;
+            }
 
             const ItemButton = ({ id, children }) => (
                 <button
@@ -152,19 +327,35 @@
                     <div className="max-w-4xl mx-auto">
                         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
                             <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
-                                <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-                                    Strategia Nutrizionale - Andrea Remondi
-                                </h1>
-                                <button
-                                    onClick={resetAll}
-                                    className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium"
-                                >
-                                    <RotateCcw />
-                                    Reset
-                                </button>
+                                <div>
+                                    <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+                                        Strategia Nutrizionale - Andrea Remondi
+                                    </h1>
+                                    <p className="text-sm text-gray-500 mt-1">
+                                        {user.email}
+                                    </p>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={resetAll}
+                                        className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium"
+                                    >
+                                        <RotateCcw />
+                                        Reset
+                                    </button>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="flex items-center gap-2 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium"
+                                    >
+                                        <LogOut />
+                                        Esci
+                                    </button>
+                                </div>
                             </div>
-                            <p className="text-gray-600">Clicca sugli alimenti consumati per tracciarli</p>
-                            <p className="text-sm text-gray-500 mt-2">Ultimo reset: {lastReset}</p>
+                            <p className="text-gray-600">Clicca sugli alimenti consumati per tracciarli - condiviso in tempo reale!</p>
+                            {lastReset && (
+                                <p className="text-sm text-gray-500 mt-2">Ultimo reset: {lastReset}</p>
+                            )}
                         </div>
 
                         <Section title="🌅 COLAZIONE" sectionKey="colazione">
